@@ -1,0 +1,62 @@
+body,
+div,
+ul,
+li,
+p,
+a,
+span,
+i,
+strong,
+em,
+ins,
+del,
+h1,
+h2,
+h3,
+img,
+input,
+nav {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* 将所有的标签转换成内减模型的盒子 */
+}
+body {
+    font-size: 12px;
+    line-height: 1;
+}
+li {
+    list-style: none;
+}
+a {
+    text-decoration: none;
+    color: #000;
+}
+i {
+    font-style: normal;
+}
+img {
+    border: none;
+    vertical-align: middle;
+}
+input {
+    border: none;
+    outline: none;
+}
+.w {
+    width: 1140px;
+    margin: 0 auto;
+}
+.clearfix::after {
+    display: block;
+    content: ".";
+    clear: both;
+    height: 0;
+    visibility: hidden;
+}
+.clearfix {
+    *zoom: 1;
+}
+.w {
+    width: 1300px;
+}
