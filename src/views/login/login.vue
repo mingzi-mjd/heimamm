@@ -10,29 +10,32 @@
         <div class="userLogin">用户登录</div>
       </div>
       <div class="content">
-        <el-input class="phone" placeholder="请输入手机号码" prefix-icon="el-icon-user" v-model="phone"></el-input>
-        <el-input
-          class="password"
-          placeholder="请输入密码"
-          prefix-icon="el-icon-lock"
-          v-model="password"
-        ></el-input>
-        <div class="code-box">
-          <el-input class="code" placeholder="请输入验证码" prefix-icon="el-icon-key" v-model="code"></el-input>
-          <div class="code-ico"></div>
-        </div>
-        <!-- `checked` 为 true 或 false -->
-        <el-checkbox class="checkbox" v-model="checked">
-          我已阅读并同意
-          <el-link class="el-a" type="primary">用户协议</el-link>和
-          <el-link class="el-a" type="primary">隐私条款</el-link>
-        </el-checkbox>
-        <div class="btn-login">
-          <el-button type="primary">登录</el-button>
-        </div>
-        <div class="btn-register">
-          <el-button type="primary">注册</el-button>
-        </div>
+        <el-form ref="sizeForm" :rules="rules" :model="sizeForm">
+          <!-- element表单验证必须加上<el-form-item prop="name">标签才会有用 -->
+          <el-form-item prop="name">
+            <el-input class="form-username" v-model="sizeForm.name" placeholder="请输入用户名"></el-input>
+          </el-form-item>
+          <el-form-item prop="password">
+            <el-input class="form-password" v-model="sizeForm.password" placeholder="密码"></el-input>
+          </el-form-item>
+          <div class="form-code-box">
+            <el-form-item prop="code">
+              <el-input class="form-code" v-model="sizeForm.code" placeholder="请输入验证码"></el-input>
+            </el-form-item>
+            <div class="code-img">
+              <img @click="changeImgURL" :src="imgURL" />
+            </div>
+          </div>
+          <div class="checkbox">
+            <el-checkbox v-model="sizeForm.checked">
+              我已阅读并同意
+              <el-link class="checkbox-a" :underline="false" type="primary">用户协议</el-link>和
+              <el-link class="checkbox-a" :underline="false" type="primary">隐私条款</el-link>
+            </el-checkbox>
+          </div>
+          <el-button class="form-login form-btn" type="primary" @click="submitForm('sizeForm')">登录</el-button>
+          <el-button class="form-register form-btn">注册</el-button>
+        </el-form>
       </div>
     </div>
     <div class="right">
@@ -42,22 +45,106 @@
 </template>
 
 <script>
+import axios from "axios";
+// 验证手机号码---正则表达式
+const verifyPhone = (rule, value, callback) => {
+  if (value == "") {
+    callback(new Error("手机号码不能为空!"));
+  } else {
+    const regular = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
+    if (regular.test(value) == true) {
+      // 正确
+      callback();
+    } else {
+      // 错误
+      callback(new Error("请输入正确的手机号码!"));
+    }
+  }
+};
 export default {
   // 组件名称在插件中可以看到
   name: "login",
   data() {
     return {
-      phone: "",
-      password: "",
-      code: "",
-      checked: false
+      imgURL: process.env.VUE_APP_BASEURL + "/captcha?type=login", // 验证码的路径
+      sizeForm: {
+        // element-ui表单绑定数据
+        name: "",
+        password: "",
+        code: "",
+        checked: false
+      },
+      rules: {
+        // 规则
+        name: [
+          // 用户名的规则
+          { validator: verifyPhone, trigger: "blur" }
+        ],
+        password: [
+          // 密码的规则
+          { required: true, message: "密码不能为空", trigger: "blur" },
+          {
+            min: 6,
+            max: 12,
+            message: "密码长度为6~12个字符",
+            trigger: "blur"
+          }
+        ],
+        code: [
+          // 验证码的规则
+          { required: true, message: "验证码不能为空", trigger: "blur" },
+          { min: 4, max: 4, message: "验证码长度为4", trigger: "blur" }
+        ]
+      }
     };
+  },
+
+  methods: {
+    changeImgURL() {
+      // 图片点击事件
+      this.imgURL =
+        process.env.VUE_APP_BASEURL + "/captcha?type=login&" + Date.now(); // 加上1970.1.1到现在的毫秒数
+    },
+    submitForm(formName) {
+      0;
+      this.$refs[formName].validate(valid => {
+        if (this.sizeForm.checked != true) {
+          this.$message.warning("请勾选用户协议");
+          return;
+        }
+        if (valid) {
+          axios({
+            url: process.env.VUE_APP_BASEURL + "/login",
+            method: "post",
+            withCredentials: true, // 携带cookie
+            data: { phone: this.sizeForm.name, password: this.sizeForm.password, code: this.sizeForm.code }
+          }).then(res => {
+            //成功回调
+            if (res.data.code == 200) {
+              this.$message.success("登录成功");
+            } else if(res.data.code == 202) {
+              this.$message.success(res.data.message);
+              this.changeImgURL();
+            }
+          });
+          // this.$message.success("111"); // vue实例原型的方法---来自于element-ui
+        } else {
+          this.$message.warning("请检查输入格式");
+          this.changeImgURL();
+          return false;
+        }
+      });
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    }
   }
 };
 </script>
 
-<style scoped lang = 'less'>
+<style lang = 'less'>
 .centainer {
+  width: 100%;
   display: flex;
   /* 主轴中间有空隙 */
   justify-content: space-around;
@@ -92,7 +179,6 @@ export default {
       }
       .title {
         margin-right: 14px;
-
         font-size: 24px;
         font-weight: 400;
       }
@@ -111,55 +197,58 @@ export default {
     .content {
       width: 394px;
       margin-left: 43px;
-
-      .phone.el-input.el-input--prefix {
-        margin-bottom: 25px;
-        /deep/.el-input__inner {
+      .form-username.el-input {
+        height: 45px;
+        input.el-input__inner {
           height: 45px;
         }
       }
-      .password.el-input.el-input--prefix {
-        margin-bottom: 26px;
-        /deep/.el-input__inner {
+      .form-password.el-input {
+        height: 43px;
+        input.el-input__inner {
           height: 43px;
         }
       }
-      .code-box {
+      .form-code-box {
+        height: 44px;
         display: flex;
         margin-bottom: 32px;
-        .code.el-input.el-input--prefix {
+        .form-code {
           width: 284px;
-          /deep/.el-input__inner {
+          input.el-input__inner {
             height: 44px;
           }
         }
-        .code-ico {
+        .code-img {
           width: 110px;
           height: 42px;
           background-color: pink;
+          img {
+            width: 100%;
+            height: 100%;
+            /* 使点击时变成小手 */
+            cursor: pointer;
+          }
         }
       }
       .checkbox {
-        sapn {
-          font-size: 16px;
-        }
-        .el-a {
-          visibility: initial;
+        height: 16px;
+        line-height: 16px;
+        margin-bottom: 28px;
+        .checkbox-a {
+          line-height: 16px;
+          margin-bottom: 2px;
         }
       }
-      .btn-login {
-        padding-top: 28px;
+      .form-btn {
+        width: 394px;
+        height: 40px;
+      }
+      .form-login {
         margin-bottom: 26px;
-        .el-button.el-button--primary {
-          width: 394px;
-          height: 40px;
-        }
       }
-      .btn-register {
-        .el-button.el-button--primary {
-          width: 394px;
-          height: 40px;
-        }
+      .form-register {
+        margin-left: 0;
       }
     }
   }

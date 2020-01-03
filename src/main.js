@@ -13,6 +13,9 @@ Vue.use(ElementUI);
 
 Vue.config.productionTip = false
 
+// 测试基地址接口
+window.console.log(process.env.VUE_APP_BASEURL);
+
 new Vue({
   router,
   render: h => h(App),
