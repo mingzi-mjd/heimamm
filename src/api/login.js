@@ -9,3 +9,21 @@ export function login(data) {
     data
   })
 }
+
+export function registerBtn(data) {
+  return axios({
+    url: 'http://183.237.67.218:3002/register',
+    method: 'post',
+    withCredentials: true, // 携带cookie
+    data
+  })
+}
+
+export function registerMessage(data) {
+  return axios({
+    url: 'http://183.237.67.218:3002/sendsms',
+    method: "post",
+    withCredentials: true, // 携带cookie
+    data
+  })
+}
