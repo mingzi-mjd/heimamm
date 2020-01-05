@@ -109,20 +109,19 @@
             v-model="registerForm.phoneCode"
             autocomplete="off"
           ></el-input>
-          <el-button @click="phoneCode" class="phoneCode">获取验证码{{ rockon != 0 ? rockon + "S" : "" }}</el-button>
+          <el-button @click="phoneCode" :disabled='rockon!=0' class="phoneCode">获取验证码{{ rockon != 0 ? rockon + "S" : "" }}</el-button>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="registerClick">确 定</el-button>
+        <el-button type="primary" @click="registerClick" :disabled='flag!=true'>确 定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import axios from "axios";
-import {login} from '../../api/login.js';
+import {login, registerBtn, registerMessage} from '../../api/login.js';
 // 验证手机号码---正则表达式
 const verifyPhone = (rule, value, callback) => {
   if (value == "") {
@@ -199,8 +198,9 @@ export default {
         phone: "",
         email: ""
       },
-      graphicUrl: process.env.VUE_APP_BASEURL + "/captcha?type=sendsms",
+      graphicUrl: 'http://183.237.67.218:3002/captcha?type=sendsms',
       registerRules: {
+        updata:[{required: true, message: "头像", trigger: "blur"}],
         userName: [
           { required: true, message: "用户名不能为空", trigger: "blur" },
           { min: 3, max: 8, message: "用户名长度为3~8个字符", trigger: "blur" }
@@ -212,7 +212,8 @@ export default {
         phone: [{ required: true, validator: verifyPhone, trigger: "blur" }],
         email: [{ required: true, validator: emailRule, trigger: "blur" }]
       },
-      rockon: 0
+      rockon: 0,
+      flag:false,
     };
   },
 
@@ -224,7 +225,7 @@ export default {
     },
     changeGraphicURL() {
       this.graphicUrl =
-        process.env.VUE_APP_BASEURL + "/captcha?type=sendsms" + Date.now();
+        'http://183.237.67.218:3002/captcha?type=sendsms&i='+Math.random()*100;
     },
     submitForm(formName) { // 点击登录的表单验证
       this.$refs[formName].validate(valid => {
@@ -260,27 +261,27 @@ export default {
 
     registerClick() {
       // 确定注册按钮点击事件
-      axios({
-        url: process.env.VUE_APP_BASEURL + "/register",
-        method: 'post',
-        withCredentials: true, // 携带cookie
-        data: {
-        username:this.registerForm.userName,
-        phone:this.registerForm.phone,
-        email:this.registerForm.email,
-        avatar:this.registerForm.avatar,
-        password:this.registerForm.userPassword,
-        rcode:this.registerForm.phoneCode
-        }
-      }).then(res => {
+      if (this.flag!=true) {
+        this.$message.warning('请输入手机验证码!');
+        return;
+      } else {
+        registerBtn({
+    username:this.registerForm.userName,
+    phone:this.registerForm.phone,
+    email:this.registerForm.email,
+    avatar:this.registerForm.avatar,
+    password:this.registerForm.userPassword,
+    rcode:this.registerForm.phoneCode}).then(res => {
         //成功回调
         window.console.log(res);
         if (res.data.code != 200) {
           this.$message.info(res.data.message);
+          this.changeGraphicURL();
         } else if(res.data.code == 200){
           this.$message.info('登录成功!');
         }
       });
+      }
     },
     handleAvatarSuccess(res, file) {
       //请求头设置
@@ -303,13 +304,14 @@ export default {
     },
     phoneCode() {
       if (this.registerForm.graphic.length != 4) {
-        this.$message.warning("验证码格式错误!");
+        this.$message.error("验证码格式错误!");
         this.changeGraphicURL();
         return;
       }
       const phoneRulu = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
       if (!phoneRulu.test(this.registerForm.phone)) {
-        this.$message.warning("手机号码格式错误!");
+        this.$message.error("手机号码格式错误!");
+        this.changeGraphicURL();
         return;
       }
       if (this.rockon === 0) {
@@ -319,20 +321,22 @@ export default {
           if (this.rockon == 0) {
             clearInterval(myTime);
           }
-        }, 1000);
+        }, 100);
         // 发送短信
-        axios({
-          url: process.env.VUE_APP_BASEURL + "/sendsms",
-          method: "post",
-          withCredentials: true, // 携带cookie
-          data: {
-            code: this.registerForm.graphic,
-            phone: this.registerForm.phone
-          }
-        }).then(res => {
+        registerMessage({
+      code: this.registerForm.graphic,
+      phone: this.registerForm.phone,
+      t:Date.now()
+    }).then(res => {
           //成功回调
           window.console.log(res);
-          this.$message.info("短信验证码是:" + res.data.data.captcha);
+          if (res.data.code!=200) {
+            this.changeGraphicURL();
+            this.$message.error(res.data.message);
+          }else {
+            this.$message.info("短信验证码是:" + res.data.data.captcha);
+            this.flag = true;
+          }
         });
       }
     }
