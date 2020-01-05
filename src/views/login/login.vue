@@ -1,5 +1,5 @@
 <template>
-  <div class="centainer">
+  <div class="login-centainer">
     <div class="left">
       <div class="top">
         <div class="logo">
@@ -288,6 +288,7 @@ export default {
             this.changeGraphicURL();
           } else if (res.data.code == 200) {
             this.$message.info("注册成功,请登录!");
+
             this.dialogFormVisible = false;
           }
         });
@@ -358,7 +359,7 @@ export default {
 </script>
 
 <style lang = 'less'>
-.centainer {
+.login-centainer {
   width: 100%;
   display: flex;
   /* 主轴中间有空隙 */
