@@ -12,7 +12,7 @@ export function login(data) {
 
 export function registerBtn(data) {
   return axios({
-    url: 'http://183.237.67.218:3002/register',
+    url: process.env.VUE_APP_BASEURL + '/register',
     method: 'post',
     withCredentials: true, // 携带cookie
     data

@@ -79,6 +79,7 @@
             <img v-if="imageUrl" :src="imageUrl" class="avatar" />
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
+          <el-input v-model="registerForm.avatar" type="hidden"></el-input>
         </el-form-item>
         <el-form-item label="昵称" prop="userName">
           <!--加上规则自动拥有小红星  -->
@@ -109,19 +110,23 @@
             v-model="registerForm.phoneCode"
             autocomplete="off"
           ></el-input>
-          <el-button @click="phoneCode" :disabled='rockon!=0' class="phoneCode">获取验证码{{ rockon != 0 ? rockon + "S" : "" }}</el-button>
+          <el-button
+            @click="phoneCode"
+            :disabled="rockon!=0"
+            class="phoneCode"
+          >获取验证码{{ rockon != 0 ? rockon + "S" : "" }}</el-button>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="registerClick" :disabled='flag!=true'>确 定</el-button>
+        <el-button type="primary" @click="registerClick" :disabled="flag!=true">确 定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import {login, registerBtn, registerMessage} from '../../api/login.js';
+import { login, registerBtn, registerMessage } from "../../api/login.js";
 // 验证手机号码---正则表达式
 const verifyPhone = (rule, value, callback) => {
   if (value == "") {
@@ -196,11 +201,12 @@ export default {
         graphic: "",
         userPassword: "",
         phone: "",
-        email: ""
+        email: "",
+        avatar:''
       },
-      graphicUrl: 'http://183.237.67.218:3002/captcha?type=sendsms',
+      graphicUrl: "http://183.237.67.218:3002/captcha?type=sendsms",
       registerRules: {
-        updata:[{required: true, message: "头像", trigger: "blur"}],
+        updata: [{ required: true, message: "头像", trigger: "blur" }],
         userName: [
           { required: true, message: "用户名不能为空", trigger: "blur" },
           { min: 3, max: 8, message: "用户名长度为3~8个字符", trigger: "blur" }
@@ -213,7 +219,7 @@ export default {
         email: [{ required: true, validator: emailRule, trigger: "blur" }]
       },
       rockon: 0,
-      flag:false,
+      flag: false
     };
   },
 
@@ -225,20 +231,22 @@ export default {
     },
     changeGraphicURL() {
       this.graphicUrl =
-        'http://183.237.67.218:3002/captcha?type=sendsms&i='+Math.random()*100;
+        "http://183.237.67.218:3002/captcha?type=sendsms&i=" +
+        Math.random() * 100;
     },
-    submitForm(formName) { // 点击登录的表单验证
+    submitForm(formName) {
+      // 点击登录的表单验证
       this.$refs[formName].validate(valid => {
         if (this.sizeForm.checked != true) {
           this.$message.warning("请勾选用户协议");
           return;
         }
         if (valid) {
-          login(
-            {phone: this.sizeForm.name,
-              password: this.sizeForm.password,
-              code: this.sizeForm.code}
-            ).then(res => {
+          login({
+            phone: this.sizeForm.name,
+            password: this.sizeForm.password,
+            code: this.sizeForm.code
+          }).then(res => {
             //成功回调
             if (res.data.code == 200) {
               this.$message.success("登录成功");
@@ -261,34 +269,39 @@ export default {
 
     registerClick() {
       // 确定注册按钮点击事件
-      if (this.flag!=true) {
-        this.$message.warning('请输入手机验证码!');
+      if (this.flag != true) {
+        this.$message.warning("请输入手机验证码!");
         return;
       } else {
         registerBtn({
-    username:this.registerForm.userName,
-    phone:this.registerForm.phone,
-    email:this.registerForm.email,
-    avatar:this.registerForm.avatar,
-    password:this.registerForm.userPassword,
-    rcode:this.registerForm.phoneCode}).then(res => {
-        //成功回调
-        window.console.log(res);
-        if (res.data.code != 200) {
-          this.$message.info(res.data.message);
-          this.changeGraphicURL();
-        } else if(res.data.code == 200){
-          this.$message.info('登录成功!');
-        }
-      });
+          username: this.registerForm.userName,
+          phone: this.registerForm.phone,
+          email: this.registerForm.email,
+          avatar: this.registerForm.avatar,
+          password: this.registerForm.userPassword,
+          rcode: this.registerForm.phoneCode
+        }).then(res => {
+          //成功回调
+          window.console.log(res);
+          if (res.data.code != 200) {
+            this.$message.info(res.data.message);
+            this.changeGraphicURL();
+          } else if (res.data.code == 200) {
+            this.$message.info("注册成功,请登录!");
+            this.dialogFormVisible = false;
+          }
+        });
       }
     },
     handleAvatarSuccess(res, file) {
       //请求头设置
       // 生成本地预览
       this.imageUrl = URL.createObjectURL(file.raw);
+      window.console.log(file);
       // 准备提交的数据
+      // window.console.log(res); // 图片的路径
       this.registerForm.avatar = res.data.file_path;
+      window.console.log(this.registerForm.avatar);
     },
     beforeAvatarUpload(file) {
       const isJPG = file.type === "image/jpeg";
@@ -324,16 +337,16 @@ export default {
         }, 100);
         // 发送短信
         registerMessage({
-      code: this.registerForm.graphic,
-      phone: this.registerForm.phone,
-      t:Date.now()
-    }).then(res => {
+          code: this.registerForm.graphic,
+          phone: this.registerForm.phone,
+          t: Date.now()
+        }).then(res => {
           //成功回调
           window.console.log(res);
-          if (res.data.code!=200) {
+          if (res.data.code != 200) {
             this.changeGraphicURL();
             this.$message.error(res.data.message);
-          }else {
+          } else {
             this.$message.info("短信验证码是:" + res.data.data.captcha);
             this.flag = true;
           }
