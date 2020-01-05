@@ -13,14 +13,29 @@
         <el-form ref="sizeForm" :rules="rules" :model="sizeForm">
           <!-- element表单验证必须加上<el-form-item prop="name">标签才会有用 -->
           <el-form-item prop="name">
-            <el-input class="form-username" v-model="sizeForm.name" placeholder="请输入用户名"></el-input>
+            <el-input
+              prefix-icon="el-icon-user"
+              class="form-username"
+              v-model="sizeForm.name"
+              placeholder="请输入用户名"
+            ></el-input>
           </el-form-item>
           <el-form-item prop="password">
-            <el-input class="form-password" v-model="sizeForm.password" placeholder="密码"></el-input>
+            <el-input
+              prefix-icon="el-icon-lock"
+              class="form-password"
+              v-model="sizeForm.password"
+              placeholder="密码"
+            ></el-input>
           </el-form-item>
           <div class="form-code-box">
             <el-form-item prop="code">
-              <el-input class="form-code" v-model="sizeForm.code" placeholder="请输入验证码"></el-input>
+              <el-input
+                prefix-icon="el-icon-key"
+                class="form-code"
+                v-model="sizeForm.code"
+                placeholder="请输入验证码"
+              ></el-input>
             </el-form-item>
             <div class="code-img">
               <img @click="changeImgURL" :src="imgURL" />
@@ -34,18 +49,80 @@
             </el-checkbox>
           </div>
           <el-button class="form-login form-btn" type="primary" @click="submitForm('sizeForm')">登录</el-button>
-          <el-button class="form-register form-btn">注册</el-button>
+          <el-button class="form-register form-btn" @click="dialogFormVisible = true">注册</el-button>
         </el-form>
       </div>
     </div>
     <div class="right">
       <img src="../../assets/login_banner_ele.png" />
     </div>
+
+    <el-dialog
+      title="用户注册"
+      :visible.sync="dialogFormVisible"
+      :show-close="false"
+      width="600px"
+      :center="true"
+      top="10vh"
+      custom-class="form-title"
+    >
+      <el-form :model="registerForm" :rules="registerRules" ref="registerForm" class="formContent">
+        <el-form-item label="头像" class="updata" prop="updata">
+          <el-upload
+            class="avatar-uploader"
+            :action="actionUrl"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            name="image"
+          >
+            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="昵称" prop="userName">
+          <!--加上规则自动拥有小红星  -->
+          <el-input prefix-icon="el-icon-user" v-model="registerForm.userName" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input prefix-icon="el-icon-message" v-model="registerForm.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="手机" prop="phone">
+          <el-input prefix-icon="el-icon-phone" v-model="registerForm.phone" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="userPassword">
+          <el-input
+            prefix-icon="el-icon-lock"
+            v-model="registerForm.userPassword"
+            autocomplete="off"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="图形码" class="graphic-box" prop="graphic">
+          <el-input prefix-icon="el-icon-key" v-model="registerForm.graphic" autocomplete="off"></el-input>
+          <div class="graphic">
+            <img :src="graphicUrl" @click="changeGraphicURL" />
+          </div>
+        </el-form-item>
+        <el-form-item label="验证码" class="phoneCode-box" prop="phoneCode">
+          <el-input
+            prefix-icon="el-icon-mobile"
+            v-model="registerForm.phoneCode"
+            autocomplete="off"
+          ></el-input>
+          <el-button @click="phoneCode" class="phoneCode">获取验证码{{ rockon != 0 ? rockon + "S" : "" }}</el-button>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="registerClick">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import {login} from '../../api/login.js';
 // 验证手机号码---正则表达式
 const verifyPhone = (rule, value, callback) => {
   if (value == "") {
@@ -58,6 +135,19 @@ const verifyPhone = (rule, value, callback) => {
     } else {
       // 错误
       callback(new Error("请输入正确的手机号码!"));
+    }
+  }
+};
+// 注册邮箱验证
+const emailRule = (rule, value, callback) => {
+  if (value == "") {
+    callback(new Error("邮箱不能为空!"));
+  } else {
+    const rule = /\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/;
+    if (rule.test(value) == true) {
+      callback();
+    } else {
+      callback(new Error("请输入正确的邮箱地址!"));
     }
   }
 };
@@ -95,7 +185,34 @@ export default {
           { required: true, message: "验证码不能为空", trigger: "blur" },
           { min: 4, max: 4, message: "验证码长度为4", trigger: "blur" }
         ]
-      }
+      },
+
+      actionUrl: process.env.VUE_APP_BASEURL + "/uploads",
+      imageUrl: "",
+      dialogTableVisible: false,
+      dialogFormVisible: false,
+      registerForm: {
+        userName: "",
+        phoneCode: "",
+        graphic: "",
+        userPassword: "",
+        phone: "",
+        email: ""
+      },
+      graphicUrl: process.env.VUE_APP_BASEURL + "/captcha?type=sendsms",
+      registerRules: {
+        userName: [
+          { required: true, message: "用户名不能为空", trigger: "blur" },
+          { min: 3, max: 8, message: "用户名长度为3~8个字符", trigger: "blur" }
+        ],
+        userPassword: [
+          { required: true, message: "密码不能为空", trigger: "blur" },
+          { min: 6, max: 12, message: "密码长度为6~12个字符", trigger: "blur" }
+        ],
+        phone: [{ required: true, validator: verifyPhone, trigger: "blur" }],
+        email: [{ required: true, validator: emailRule, trigger: "blur" }]
+      },
+      rockon: 0
     };
   },
 
@@ -103,26 +220,28 @@ export default {
     changeImgURL() {
       // 图片点击事件
       this.imgURL =
-        process.env.VUE_APP_BASEURL + "/captcha?type=login&" + Date.now(); // 加上1970.1.1到现在的毫秒数
+        process.env.VUE_APP_BASEURL + "/captcha?type=login" + Date.now(); // 加上1970.1.1到现在的毫秒数
     },
-    submitForm(formName) {
-      0;
+    changeGraphicURL() {
+      this.graphicUrl =
+        process.env.VUE_APP_BASEURL + "/captcha?type=sendsms" + Date.now();
+    },
+    submitForm(formName) { // 点击登录的表单验证
       this.$refs[formName].validate(valid => {
         if (this.sizeForm.checked != true) {
           this.$message.warning("请勾选用户协议");
           return;
         }
         if (valid) {
-          axios({
-            url: process.env.VUE_APP_BASEURL + "/login",
-            method: "post",
-            withCredentials: true, // 携带cookie
-            data: { phone: this.sizeForm.name, password: this.sizeForm.password, code: this.sizeForm.code }
-          }).then(res => {
+          login(
+            {phone: this.sizeForm.name,
+              password: this.sizeForm.password,
+              code: this.sizeForm.code}
+            ).then(res => {
             //成功回调
             if (res.data.code == 200) {
               this.$message.success("登录成功");
-            } else if(res.data.code == 202) {
+            } else if (res.data.code == 202) {
               this.$message.success(res.data.message);
               this.changeImgURL();
             }
@@ -137,6 +256,85 @@ export default {
     },
     resetForm(formName) {
       this.$refs[formName].resetFields();
+    },
+
+    registerClick() {
+      // 确定注册按钮点击事件
+      axios({
+        url: process.env.VUE_APP_BASEURL + "/register",
+        method: 'post',
+        withCredentials: true, // 携带cookie
+        data: {
+        username:this.registerForm.userName,
+        phone:this.registerForm.phone,
+        email:this.registerForm.email,
+        avatar:this.registerForm.avatar,
+        password:this.registerForm.userPassword,
+        rcode:this.registerForm.phoneCode
+        }
+      }).then(res => {
+        //成功回调
+        window.console.log(res);
+        if (res.data.code != 200) {
+          this.$message.info(res.data.message);
+        } else if(res.data.code == 200){
+          this.$message.info('登录成功!');
+        }
+      });
+    },
+    handleAvatarSuccess(res, file) {
+      //请求头设置
+      // 生成本地预览
+      this.imageUrl = URL.createObjectURL(file.raw);
+      // 准备提交的数据
+      this.registerForm.avatar = res.data.file_path;
+    },
+    beforeAvatarUpload(file) {
+      const isJPG = file.type === "image/jpeg";
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isJPG) {
+        this.$message.error("上传头像图片只能是 JPG 格式!");
+      }
+      if (!isLt2M) {
+        this.$message.error("上传头像图片大小不能超过 2MB!");
+      }
+      return isJPG && isLt2M;
+    },
+    phoneCode() {
+      if (this.registerForm.graphic.length != 4) {
+        this.$message.warning("验证码格式错误!");
+        this.changeGraphicURL();
+        return;
+      }
+      const phoneRulu = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
+      if (!phoneRulu.test(this.registerForm.phone)) {
+        this.$message.warning("手机号码格式错误!");
+        return;
+      }
+      if (this.rockon === 0) {
+        this.rockon = 60;
+        let myTime = setInterval(() => {
+          this.rockon--;
+          if (this.rockon == 0) {
+            clearInterval(myTime);
+          }
+        }, 1000);
+        // 发送短信
+        axios({
+          url: process.env.VUE_APP_BASEURL + "/sendsms",
+          method: "post",
+          withCredentials: true, // 携带cookie
+          data: {
+            code: this.registerForm.graphic,
+            phone: this.registerForm.phone
+          }
+        }).then(res => {
+          //成功回调
+          window.console.log(res);
+          this.$message.info("短信验证码是:" + res.data.data.captcha);
+        });
+      }
     }
   }
 };
@@ -202,11 +400,17 @@ export default {
         input.el-input__inner {
           height: 45px;
         }
+        .el-input__icon {
+          line-height: 45px;
+        }
       }
       .form-password.el-input {
         height: 43px;
         input.el-input__inner {
           height: 43px;
+        }
+        .el-input__icon {
+          line-height: 43px;
         }
       }
       .form-code-box {
@@ -217,6 +421,9 @@ export default {
           width: 284px;
           input.el-input__inner {
             height: 44px;
+          }
+          .el-input__icon {
+            line-height: 44px;
           }
         }
         .code-img {
@@ -256,6 +463,109 @@ export default {
   .right > img {
     width: 100%;
     height: 100%;
+  }
+  .form-title {
+    .el-dialog__header {
+      background: linear-gradient(
+        225deg,
+        rgba(20, 147, 250, 1),
+        rgba(1, 198, 250, 1)
+      );
+      text-align: center;
+      height: 53px;
+      .el-dialog__title {
+        color: #fff;
+      }
+    }
+  }
+  .formContent {
+    .updata {
+      .el-upload.el-upload--text {
+        display: block;
+        width: 179px;
+        height: 179px;
+        margin: 0 auto;
+      }
+      .avatar-uploader .el-upload {
+        border: 1px dashed #d9d9d9;
+        border-radius: 6px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+      .avatar-uploader .el-upload:hover {
+        border-color: #409eff;
+      }
+      .avatar-uploader-icon {
+        font-size: 28px;
+        color: #8c939d;
+        width: 178px;
+        height: 178px;
+        line-height: 178px;
+        text-align: center;
+      }
+      .avatar {
+        width: 178px;
+        height: 178px;
+        display: block;
+      }
+    }
+    .el-form-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0;
+      padding-bottom: 24px;
+      .el-form-item__content {
+        width: 489px;
+        .el-form-item {
+          width: 489px;
+        }
+        .el-input__inner {
+          width: 489px;
+          display: block;
+          margin-right: 0px;
+        }
+      }
+    }
+    .graphic-box.el-form-item {
+      .el-form-item__content {
+        display: flex;
+        justify-content: space-between;
+        .el-input {
+          width: 325px;
+          .el-input__inner {
+            width: 325px;
+          }
+        }
+        .graphic {
+          width: 143px;
+          height: 40px;
+
+          img {
+            width: 143px;
+            height: 40px;
+            /* 使点击时变成小手 */
+            cursor: pointer;
+          }
+        }
+      }
+    }
+    .phoneCode-box.el-form-item {
+      .el-form-item__content {
+        display: flex;
+        justify-content: space-between;
+        .el-input {
+          width: 325px;
+          .el-input__inner {
+            width: 325px;
+          }
+        }
+        .phoneCode {
+          width: 143px;
+          height: 40px;
+        }
+      }
+    }
   }
 }
 </style>
