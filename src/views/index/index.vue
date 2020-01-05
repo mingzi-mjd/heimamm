@@ -1,7 +1,8 @@
 <template>
   <el-container class="index-container">
     <el-header>
-      <div class="el-icon-s-fold header-icon"></div>
+      <!-- <el-radio-button :label="false"></el-radio-button> -->
+      <i @click="headerIcon" class="el-icon-s-fold header-icon"></i>
       <img class="left-img" src="../../assets/矢量智能对象 拷贝 9_1.png" alt />
       <span class="header-title">黑马面面</span>
       <div class="right">
@@ -13,37 +14,34 @@
       </div>
     </el-header>
     <el-container>
-      <el-aside width="200px">
-        <el-col :span="24">
-          <el-menu
-            default-active="2"
-            class="el-menu-vertical-demo"
-            @open="handleOpen"
-            @close="handleClose"
-          >
-            <el-menu-item index="1">
-              <i class="el-icon-pie-chart"></i>
-              <span slot="title">数据概览</span>
-            </el-menu-item>
-            <el-menu-item index="2">
-              <i class="el-icon-user"></i>
-              <span slot="title">用户列表</span>
-            </el-menu-item>
-            <el-menu-item index="3">
-              <i class="el-icon-edit-outline"></i>
-              <span slot="title">题库列表</span>
-            </el-menu-item>
-            <el-menu-item index="4">
-              <i class="el-icon-office-building"></i>
-              <span slot="title">企业列表</span>
-            </el-menu-item>
-            <el-menu-item index="5">
-              <i class="el-icon-notebook-2"></i>
-              <span slot="title">学科列表</span>
-            </el-menu-item>
-          </el-menu>
-        </el-col>
-      </el-aside>
+      <el-menu
+        class="el-menu-vertical-demo"
+        default-active="1-4-1"
+        @open="handleOpen"
+        @close="handleClose"
+        :collapse="isCollapse"
+      >
+        <el-menu-item index="1">
+          <i class="el-icon-pie-chart"></i>
+          <span slot="title">数据概览</span>
+        </el-menu-item>
+        <el-menu-item index="2">
+          <i class="el-icon-user"></i>
+          <span slot="title">用户列表</span>
+        </el-menu-item>
+        <el-menu-item index="3">
+          <i class="el-icon-edit-outline"></i>
+          <span slot="title">题库列表</span>
+        </el-menu-item>
+        <el-menu-item index="4">
+          <i class="el-icon-office-building"></i>
+          <span slot="title">企业列表</span>
+        </el-menu-item>
+        <el-menu-item index="5">
+          <i class="el-icon-notebook-2"></i>
+          <span slot="title">学科列表</span>
+        </el-menu-item>
+      </el-menu>
       <el-main>Main</el-main>
     </el-container>
   </el-container>
@@ -56,7 +54,9 @@ export default {
   name: "index",
   data() {
     return {
-      rightInfo: {}
+      rightInfo: {},
+      flag: false,
+      isCollapse: true
     };
   },
   created() {
@@ -74,6 +74,7 @@ export default {
     },
     open() {
       this.$confirm("即将退出登录, 是否继续?", "提示", {
+        center: true,
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning"
@@ -81,23 +82,27 @@ export default {
         .then(() => {
           this.$message({
             type: "success",
-
+            center: true,
             message: "退出成功!"
           });
         })
         .catch(() => {
           this.$message({
             type: "info",
+            center: true,
             message: "已取消退出登录"
           });
         });
     },
+    headerIcon() {
+      this.isCollapse = !this.isCollapse;
+    },
     handleOpen(key, keyPath) {
-        window.console.log(key, keyPath);
-      },
-      handleClose(key, keyPath) {
-        window.console.log(key, keyPath);
-      }
+      window.console.log(key, keyPath);
+    },
+    handleClose(key, keyPath) {
+      window.console.log(key, keyPath);
+    }
   }
 };
 </script>
@@ -151,6 +156,9 @@ export default {
   }
   .el-main {
     background-color: #cccccc;
+  }
+  .el-menu-vertical-demo:not(.el-menu--collapse) {
+    width: 200px;
   }
 }
 </style>
