@@ -219,7 +219,7 @@ export default {
         email: [{ required: true, validator: emailRule, trigger: "blur" }]
       },
       rockon: 0,
-      flag: false
+      flag: false,
     };
   },
 
@@ -250,6 +250,9 @@ export default {
             //成功回调
             if (res.data.code == 200) {
               this.$message.success("登录成功");
+              window.console.log(res);
+              window.localStorage.setItem('hmmmToken',res.data.data.token);
+              this.$router.push('/index');
             } else if (res.data.code == 202) {
               this.$message.success(res.data.message);
               this.changeImgURL();
