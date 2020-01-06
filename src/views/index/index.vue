@@ -167,8 +167,13 @@ export default {
     border-top: 1px solid #ccc;
   }
   .el-main {
-    background-color: #cccccc;
+    background-color: #E8E9EC;
   }
+  /*
+    :not选择器 :
+    有前面这个类名就用前面的类名
+    没有前面的类名就用后面的类名
+  */
   .el-menu-vertical-demo:not(.el-menu--collapse) {
     width: 200px;
   }
