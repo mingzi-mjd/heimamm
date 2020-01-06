@@ -127,6 +127,7 @@
 
 <script>
 import { login, registerBtn, registerMessage } from "../../api/login.js";
+import {savaToken} from '../../utils/token.js'
 // 验证手机号码---正则表达式
 const verifyPhone = (rule, value, callback) => {
   if (value == "") {
@@ -227,7 +228,7 @@ export default {
     changeImgURL() {
       // 图片点击事件
       this.imgURL =
-        process.env.VUE_APP_BASEURL + "/captcha?type=login" + Date.now(); // 加上1970.1.1到现在的毫秒数
+        process.env.VUE_APP_BASEURL + "/captcha?type=login&t=" + Date.now(); // 加上1970.1.1到现在的毫秒数
     },
     changeGraphicURL() {
       this.graphicUrl =
@@ -251,7 +252,8 @@ export default {
             if (res.data.code == 200) {
               this.$message.success("登录成功");
               window.console.log(res);
-              window.localStorage.setItem('hmmmToken',res.data.data.token);
+              // window.localStorage.setItem('hmmmToken',res.data.data.token);
+              savaToken(res.data.data.token);
               this.$router.push('/index');
             } else if (res.data.code == 202) {
               this.$message.success(res.data.message);
@@ -291,8 +293,9 @@ export default {
             this.changeGraphicURL();
           } else if (res.data.code == 200) {
             this.$message.info("注册成功,请登录!");
-
             this.dialogFormVisible = false;
+            this.$refs.registerForm.resetFields();
+            this.imageUrl = '';
           }
         });
       }

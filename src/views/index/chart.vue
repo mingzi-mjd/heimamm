@@ -1,5 +1,5 @@
 <template>
-  <div>我是统计模块</div>
+  <div>我是数据模块</div>
 </template>
 
 <script>

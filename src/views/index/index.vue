@@ -1,7 +1,6 @@
 <template>
   <el-container class="index-container">
     <el-header>
-      <!-- <el-radio-button :label="false"></el-radio-button> -->
       <div @click="headerIcon" class="el-icon-s-fold header-icon"></div>
       <img class="left-img" src="../../assets/矢量智能对象 拷贝 9_1.png" alt />
       <span class="header-title">黑马面面</span>
@@ -20,7 +19,7 @@
         @open="handleOpen"
         @close="handleClose"
         :collapse="isCollapse"
-        :router='true'
+        :router="true"
       >
         <el-menu-item index="/index/chart">
           <i class="el-icon-pie-chart"></i>
@@ -51,7 +50,8 @@
 </template>
 
 <script>
-import { getInfo } from "../../api/index.js";
+import { getInfo, logout } from "../../api/login";
+import { removeToken } from "../../utils/token.js";
 export default {
   // 组件名称在插件中可以看到
   name: "index",
@@ -83,10 +83,18 @@ export default {
         type: "warning"
       })
         .then(() => {
-          this.$message({
-            type: "success",
-            center: true,
-            message: "退出成功!"
+          logout().then(res => {
+            //成功回调
+            window.console.log(res);
+            if (res.data.code == 200) {
+              removeToken();
+              this.$message({
+                type: "success",
+                center: true,
+                message: "退出成功!"
+              });
+              this.$router.push("/login");
+            }
           });
         })
         .catch(() => {

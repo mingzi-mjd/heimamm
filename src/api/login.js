@@ -1,5 +1,6 @@
 // 登录页面的接口
 import axios from 'axios';
+import {getToken} from '../utils/token.js'
 
 export function login(data) {
   return axios({
@@ -25,5 +26,24 @@ export function registerMessage(data) {
     method: "post",
     withCredentials: true, // 携带cookie
     data
+  })
+}
+
+export function getInfo() {
+  return axios({
+    url: process.env.VUE_APP_BASEURL + '/info',
+    method:'get',
+    // 配置请求头信息
+    // headers:{token:window.localStorage.getItem('hmmmToken')},
+    headers:{token:getToken()}
+  })
+}
+
+// 退出登录
+export function logout() {
+  return axios({
+    url:process.env.VUE_APP_BASEURL+'/logout',
+    method:'get',
+    headers: {token:getToken()}
   })
 }
