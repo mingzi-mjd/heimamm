@@ -14,8 +14,8 @@
     </el-header>
     <el-container>
       <el-menu
+        :default-active="$route.path"
         class="el-menu-vertical-demo"
-        default-active="1-4-1"
         @open="handleOpen"
         @close="handleClose"
         :collapse="isCollapse"
@@ -65,7 +65,7 @@ export default {
   created() {
     getInfo().then(res => {
       //成功回调
-      window.console.log(res);
+      // window.console.log(res);
       this.rightInfo = res.data.data;
       this.rightInfo.avatar =
         process.env.VUE_APP_BASEURL + "/" + this.rightInfo.avatar;
@@ -93,6 +93,8 @@ export default {
                 center: true,
                 message: "退出成功!"
               });
+              this.$router.push("/login");
+            }else {
               this.$router.push("/login");
             }
           });

@@ -15,21 +15,38 @@ import chart from '../views/index/chart' // 数据
 Vue.use(VueRouter)
 // 实例化
 const router = new VueRouter({
-//这里就是路由的配制项
-routes: [
-  {path: '/login',component: login},
-  {
-    path: '/index',component: index,
-    children:[
-      {path: 'subject',component: subject},
-      {path: 'enterprise',component: enterprise},
-      {path: 'question',component: question},
-      {path: 'user',component: user},
-      {path: 'chart',component: chart},
-    ]
-},
-      
-]
+  //这里就是路由的配制项
+  routes: [{
+      path: '/login',
+      component: login
+    },
+    {
+      path: '/index',
+      component: index,
+      redirect: '/index/subject', // 首页重定向
+      children: [{
+          path: 'subject',
+          component: subject
+        },
+        {
+          path: 'enterprise',
+          component: enterprise
+        },
+        {
+          path: 'question',
+          component: question
+        },
+        {
+          path: 'user',
+          component: user
+        },
+        {
+          path: 'chart',
+          component: chart
+        },
+      ]
+    },
+  ]
 })
 
 // 暴露路由
