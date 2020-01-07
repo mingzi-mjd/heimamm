@@ -23,9 +23,27 @@ export function addPort(data) {
 }
 
 // 状态修改
-export function statusEdit(data) {
+export function statusChange(data) {
   return axios({
     url:process.env.VUE_APP_BASEURL+'/subject/status',
+    method:'post',
+    headers:{ token:getToken()},
+    data
+  })
+}
+// 删除
+export function statusDelete(data) {
+  return axios({
+    url:process.env.VUE_APP_BASEURL+'/subject/remove',
+    method:'post',
+    headers:{ token:getToken()},
+    data
+  })
+}
+// 编辑
+export function statusEdit(data) {
+  return axios({
+    url:process.env.VUE_APP_BASEURL+'/subject/edit',
     method:'post',
     headers:{ token:getToken()},
     data

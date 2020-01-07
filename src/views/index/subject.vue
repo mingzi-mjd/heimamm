@@ -67,7 +67,10 @@
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button type="text" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="text" @click="handleDisabled(scope.row)">{{scope.row.status === 0 ? "启用" : "禁用"}}</el-button>
+            <el-button
+              type="text"
+              @click="handleDisabled(scope.row)"
+            >{{scope.row.status === 0 ? "启用" : "禁用"}}</el-button>
             <el-button type="text" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -120,7 +123,12 @@
 </template>
 
 <script>
-import { subjectList,addPort,statusEdit } from "../../api/subject.js";
+import {
+  subjectList,
+  addPort,
+  statusChange,
+  statusDelete,
+} from "../../api/subject.js";
 export default {
   data() {
     return {
@@ -130,12 +138,12 @@ export default {
       },
       tableData: [],
       currentPage: 1,
-      pageSizes:[10,20,30,40,50], // 每页的可选页数选项
-      pageSize:10, // 每页显示条目个数
-      total:0, // 总数据
+      pageSizes: [10, 20, 30, 40, 50], // 每页的可选页数选项
+      pageSize: 10, // 每页显示条目个数
+      total: 0, // 总数据
 
-      page:0,
-      pageList:0,
+      page: 0,
+      pageList: 0,
 
       //  弹出的表单
       dialogTableVisible: false,
@@ -161,35 +169,54 @@ export default {
           }
         ]
       },
-      flag: false,
+      flag: false
     };
   },
   methods: {
     onSubmit() {},
 
-    // 编辑按钮点击事件
-    handleEdit(row){
-      window.console.log(row);
+    handleDisabled(info) {
+      // 禁用按钮点击事件
+      statusChange({ id: info.id }).then(res => {
+        // window.console.log(res);
+        if (res.data.code == 200) {
+          this.$message.success("修改成功!");
+          this.getList();
+        }
+      });
     },
-    handleDisabled(info) { // 禁用按钮点击事件
-      statusEdit({id:info.id})
-      .then(res=>{
-        window.console.log(res);
-        this.$message.success('修改成功!');
-        this.getList();
-      })
+    handleDelete(info) {
+      // 点击删除按钮
+      statusDelete({ id: info.id }).then(res => {
+        // window.console.log(res);
+        if (res.data.code == 200) {
+          this.$message.success("删除成功!");
+          this.getList();
+        }
+      });
     },
+    // handleEdit(info) {
+    //   // 点击编辑按钮
+    //   statusEdit({info}).then(res => {
+    //     // window.console.log(res);
+    //     if (res.data.code == 200) {
+    //       this.$message.success("删除成功!");
+    //       this.getList();
+    //     }
+    //   });
+    // },
 
-    getList(){
+    getList() {
       this.tableData = [];
-      subjectList({page:this.page}).then(res => { // 页面一进来请求列表
-      //成功回调
-      window.console.log(res);
-      for(let i = 0;i< res.data.data.items.length;i++){
-        this.tableData.push(res.data.data.items[i]);
-      }
-      this.total = res.data.data.pagination.total;
-    });
+      subjectList({ page: this.page }).then(res => {
+        // 页面一进来请求列表
+        //成功回调
+        window.console.log(res);
+        for (let i = 0; i < res.data.data.items.length; i++) {
+          this.tableData.push(res.data.data.items[i]);
+        }
+        this.total = res.data.data.pagination.total;
+      });
     },
 
     // 分页组件
@@ -197,37 +224,34 @@ export default {
       window.console.log(`每页 ${pageList} 条`);
       this.pageSize = pageList;
       this.page = 1;
-      this.getList()
+      this.getList();
     },
     handleCurrentChange(page) {
       window.console.log(`当前页: ${page}`);
       this.page = page;
-      this.getList()
+      this.getList();
     },
     addSubject() {
       // 请求
-      addPort(
-        {
-          rid: this.addForm.scienceid,
-          name: this.addForm.sciencename,
-          short_name: this.addForm.abbreviation,
-          intro: this.addForm.introduce,
-          remark: this.addForm.remark
-        }
-      )
-      .then(res=>{
+      addPort({
+        rid: this.addForm.scienceid,
+        name: this.addForm.sciencename,
+        short_name: this.addForm.abbreviation,
+        intro: this.addForm.introduce,
+        remark: this.addForm.remark
+      }).then(res => {
         window.console.log(res);
         if (res.data.code == 200) {
-          this.$message.success('添加成功');
-          this.dialogFormVisible = false
+          this.$message.success("添加成功");
+          this.dialogFormVisible = false;
           window.location.reload();
         }
       });
-    },
+    }
   },
   created() {
     this.getList();
-  },
+  }
 };
 </script>
 
